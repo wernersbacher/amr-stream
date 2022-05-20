@@ -7,12 +7,14 @@
   	<!-- set buffer queue size of frame capturing to -->
   	<arg name="buffer_queue_size" default="100" />
   	<!-- frames per second to query the camera for -->
-  	<arg name="fps" default="30" />
-  	<!-- frame_id for the camera -->
+  	<arg name="fps" default="25" />
+  	
+	
+  	<arg name="colors" default="true" />
   	
     <!-- force width and height -->
-    <arg name="width" default="320"/>
-    <arg name="height" default="240"/>
+    <arg name="width" default="300"/>
+    <arg name="height" default="100"/>
 
    	<!-- images will be published at /camera_name/image with the image transports plugins (e.g.: compressed) installed -->
    	
@@ -21,6 +23,7 @@
         <param name="video_stream_provider" type="string" value="$(arg video_stream_provider)" />
         <param name="buffer_queue_size" type="int" value="$(arg buffer_queue_size)" />
         <param name="fps" type="double" value="$(arg fps)" />
+        <param name="colors" type="bool" value="$(arg colors)" />
         <param name="width" type="int" value="$(arg width)" />
         <param name="height" type="int" value="$(arg height)" />
     </node>
