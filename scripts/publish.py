@@ -1,15 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Copyright 2016 Massachusetts Institute of Technology
-
-"""Publish a video as ROS messages.
-
-    Example: rosrun amr-stream publish.py 0 --hz 25 --width 200 --height 66
-"""
-
-import argparse
-
+from types import SimpleNamespace  
 import numpy as np
 
 import cv2
@@ -21,47 +13,55 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
 bridge = CvBridge()
+        
+a = {
+    "video_stream_provider": 0,
+    "fps": 25,
+    "width": 320,
+    "height": 240,
+    "camera_name": "camera",
+    "frame_id": "camera",
+    "buffer_queue_size": 10
+}
+args = SimpleNamespace(**a)
+
 
 def main():
     """Publish a video as ROS messages.
     """
-    # Patse arguments.
-    parser = argparse.ArgumentParser(description="Convert video into a rosbag.")
-    parser.add_argument("video_file", help="Input video.")
-    parser.add_argument("-z", "--hz", default="-1", help="camera fps, if not set it will be read from camera")
-    parser.add_argument("-c", "--camera", default="camera", help="Camera name.")
-    parser.add_argument("-f", "--frame_id", default="camera",
-                        help="tf frame_id.")
-    parser.add_argument("--width", type=np.int32, default="640",
-                        help="Image width.")
-    parser.add_argument("--height", type=np.int32, default="480",
-                        help="Image height.")
-    parser.add_argument("--info_url", default="file:///camera.yml",
-                        help="Camera calibration url.")
-
-    args = parser.parse_args()
-
-    try:
-        video_channel = int(args.video_file)
-    except ValueError:
-        video_channel = args.video_file
-
-    print("Publishing %s." % (video_channel))
-
     # Set up node.
     rospy.init_node("video_publisher", anonymous=True)
-    img_pub = rospy.Publisher("/" + args.camera + "/image_raw", Image,
+
+    # load from launchfile
+    args.width = rospy.get_param('~width')
+    args.height = rospy.get_param('~height')
+    args.fps = rospy.get_param('~fps')
+    args.buffer_queue_size = rospy.get_param('~buffer_queue_size')
+    args.camera_name = rospy.get_param('~camera_name')
+
+    # convert to int?
+    try:
+        video_channel = int(args.video_stream_provider)
+    except ValueError:
+        video_channel = args.video_stream_provider
+
+    print ("Loaded arguments:")
+    print(args)
+
+
+    img_pub = rospy.Publisher("/" + args.camera_name + "/image_raw", Image,
                               queue_size=1)
 
     # Open video.
     video = cv2.VideoCapture(video_channel)
+    print("Publishing %s." % (video_channel))
 
     fps_cam = video.get(cv2.CAP_PROP_FPS)
 
     # Get frame rate.
     try:
-        fps_arg = int(args.hz)
-        if fps_arg > 0:
+        fps_arg = int(args.fps)
+        if 0 < fps_arg < fps_cam:
             fps = fps_arg
         else:
             fps = fps_cam
@@ -77,7 +77,6 @@ def main():
         
         # converting to gray-scale
         img = cv2.cvtColor(img_color, cv2.COLOR_BGR2GRAY)
-
 
         if not tmp:
             print("Could not grab frame.")
