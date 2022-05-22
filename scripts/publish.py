@@ -49,8 +49,8 @@ def main():
     except ValueError:
         video_channel = args.video_stream_provider
 
-    print ("Loaded arguments:")
-    print(args)
+    rospy.loginfo ("Loaded arguments:")
+    rospy.loginfo(args)
     
     
     img_pub = rospy.Publisher("/" + args.camera_name + "/image_raw", Image,
@@ -58,7 +58,7 @@ def main():
 
     # Open video.
     video = cv2.VideoCapture(video_channel)
-    print("Publishing %s." % (video_channel))
+    rospy.loginfo("Publishing %s." % (video_channel))
 
     fps_cam = video.get(cv2.CAP_PROP_FPS)
 
@@ -72,7 +72,7 @@ def main():
     except ValueError:
         fps = fps_cam
 
-    print(f"Publishing at {fps} FPS")
+    rospy.loginfo(f"Publishing at {fps} FPS")
     rate = rospy.Rate(fps)
 
     # Loop through video frames.
@@ -86,14 +86,14 @@ def main():
             img = img_color
 
         if not tmp:
-            print("Could not grab frame.")
+            rospy.logerror("Could not grab frame.")
             break
 
         #img_out = np.empty((args.height, args.width, img.shape[2]))  # for color
         img_out = np.empty((args.height, args.width))
 
         
-        #print(img.shape, img_out.shape)
+        #rospy.loginfo(img.shape, img_out.shape)
 
         # Compute input/output aspect ratios.
         aspect_ratio_in = np.float(img.shape[1]) / np.float(img.shape[0])
@@ -129,7 +129,7 @@ def main():
             img_out = cv2.resize(img, (args.width, args.height))
 
         #assert img_out.shape[0:2] == (args.height, args.width)
-        #print(img_out.shape[0:2], args.height, args.width)
+        #rospy.loginfo(img_out.shape[0:2], args.height, args.width)
 
         try:
             # Publish image.
@@ -142,7 +142,7 @@ def main():
             img_msg.header.frame_id = args.frame_id
             img_pub.publish(img_msg)
         except CvBridgeError as err:
-            print(err)
+            rospy.logerror(err)
 
         rate.sleep()
 
