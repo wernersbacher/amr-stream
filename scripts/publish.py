@@ -32,7 +32,7 @@ def main():
     """Publish a video as ROS messages.
     """
     # Set up node.
-    rospy.init_node("video_publisher", anonymous=True)
+    rospy.init_node("video_publisher")
 
     # load from launchfile
     args.colors = rospy.get_param('~colors')
